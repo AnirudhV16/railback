@@ -1,0 +1,25 @@
+# Ignore Python virtual environment files and folders
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+.Python
+
+# Ignore database files
+*.sqlite3
+
+# Ignore logs and temporary files
+*.log
+*.tmp
+
+# Ignore system files
+.DS_Store
+Thumbs.db
+
+# Ignore virtual environment folder
+Lib/
+share/
+Scripts/
+
+# Allow tracking all other files
+!.gitignore

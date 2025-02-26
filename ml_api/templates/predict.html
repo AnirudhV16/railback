@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spam Detection Tool</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+
+        h1 {
+            text-align: center;
+            color: #343a40;
+            margin-bottom: 30px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        label {
+            display: block;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+        input[type="text"],
+        select {
+            width: 100%;
+            padding: 12px;
+            margin-top: 5px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus,
+        select:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #007bff;
+            border-radius: 4px;
+            background-color: #e9f7fd;
+            color: #007bff;
+            text-align: center;
+            font-weight: bold;
+            display: none;
+            /* Initially hidden */
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 14px;
+            color: #777;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+            font-weight: bold;
+            color: #007bff;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Spam Detection Tool</h1>
+
+    <div class="container">
+        <form id="spamDetectionForm" method="POST">
+            {% csrf_token %}
+            <label for="inputText">Enter Text:</label>
+            <input type="text" id="inputText" name="text" placeholder="Type your message here..." required
+                aria-label="Input text for spam detection">
+
+            <label for="modelSelect">Select ML Model:</label>
+            <select id="modelSelect" name="modelSelect" aria-label="Select machine learning model">
+                <option value="bilstm">BiLSTM</option>
+                <option value="rl">Reinforcement Learning</option>
+                <option value="pu">PU Learning</option>
+            </select>
+
+            <button type="submit"><i class="fas fa-paper-plane"></i> Check Spam</button>
+        </form>
+
+        <div class="loading" id="loading">Loading...</div>
+        <div class="result" id="output">
+            Prediction: <span id="predictionResult"></span>
+        </div>
+    </div>
+    <!--
+    <div class="footer">
+        &copy; 2024 Spam Detection Tool. All rights reserved.
+    </div>
+    -->
+    <script>
+        document.getElementById('spamDetectionForm').onsubmit = async function (event) {
+            event.preventDefault(); // Prevent the default form submission
+
+            const text = document.getElementById('inputText').value;
+            const modelSelect = document.getElementById('modelSelect').value;
+            const loadingIndicator = document.getElementById('loading');
+            const outputDiv = document.getElementById('output');
+
+            loadingIndicator.style.display = 'block'; // Show loading indicator
+            outputDiv.style.display = 'none'; // Hide result section
+
+            try {
+                const response = await fetch("{% url 'classify_text' %}", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": "{{ csrf_token }}"
+                    },
+                    body: JSON.stringify({ text: text, modelSelect: modelSelect })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+
+                const data = await response.json();
+                document.getElementById('predictionResult').innerText = data.prediction;
+                outputDiv.style.display = 'block'; // Show result section
+            } catch (error) {
+                document.getElementById('predictionResult').innerText = 'Error: ' + error.message;
+                outputDiv.style.display = 'block'; // Show result section
+            } finally {
+                loadingIndicator.style.display = 'none'; // Hide loading indicator
+            }
+        };
+    </script>
+</body>
+
+</html>
