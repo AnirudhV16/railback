@@ -33,7 +33,7 @@ ALLOWED_HOSTS = [
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.redis.RedisCache',
-        'LOCATION': 'redis://localhost:6379/1',  # Change if using cloud Redis
+        'LOCATION': 'redis://default:iZNXCRVIqCJjbDunKZBhNDMTIKGGrAXD@yamanote.proxy.rlwy.net:23535',
     }
 }
 
