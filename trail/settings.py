@@ -29,6 +29,11 @@ ALLOWED_HOSTS = [
     "*",
 ]
 
+CORS_ALLOWED_ORIGINS = [
+    "https://unique-blancmange-44c8f0.netlify.app",
+]
+CORS_ALLOW_ALL_ORIGINS = False
+
 # redis
 CACHES = {
     'default': {
@@ -46,7 +51,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    "corsheaders",
+    'corsheaders',
     'ml_api',
 ]
 
@@ -60,7 +65,8 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
-    "corsheaders.middleware.CorsMiddleware",
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
 ]
 
 ROOT_URLCONF = 'trail.urls'
@@ -136,10 +142,10 @@ STATIC_URL = '/static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+'''
 CORS_ALLOW_HEADERS = [
     "content-type",  # Ensure 'Content-Type' header is allowed
     "authorization",  # If you need to allow authorization headers, add them here
 ]
-CORS_ALLOWED_ORIGINS = [
-    "https://unique-blancmange-44c8f0.netlify.app",
-]
+'''
+
