@@ -140,4 +140,6 @@ CORS_ALLOW_HEADERS = [
     "content-type",  # Ensure 'Content-Type' header is allowed
     "authorization",  # If you need to allow authorization headers, add them here
 ]
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOWED_ORIGINS = [
+    "https://unique-blancmange-44c8f0.netlify.app",
+]

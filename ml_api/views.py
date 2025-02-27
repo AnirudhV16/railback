@@ -1,3 +1,4 @@
+'''
 import json
 import os
 import pandas as pd
@@ -61,7 +62,70 @@ def soft_voting_ensemble(text):
     probs_rl = classify_with_rl(text)
     probs_pu = classify_with_pu(text)
     return (probs_bilstm + probs_rl + probs_pu) / 3
+'''
+import json
+import os
+import redis
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import io
+import base64
+import tensorflow as tf
+import torch
+import xgboost as xgb
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+from django.http import JsonResponse
+from transformers import DistilBertTokenizer, TFDistilBertModel, AutoTokenizer, AutoModelForSequenceClassification, RobertaTokenizer, TFRobertaModel
 
+# Initialize Redis client
+redis_client = redis.Redis.from_url("redis://default:iZNXCRVIqCJjbDunKZBhNDMTIKGGrAXD@yamanote.proxy.rlwy.net:23535")
+
+# Load BiLSTM model from Hugging Face
+bilstm_tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased')
+distilbert = TFDistilBertModel.from_pretrained('distilbert-base-uncased')
+distilbert.trainable = False  # Freeze DistilBERT layers
+
+bilstm_model = tf.keras.models.load_model("https://huggingface.co/AavV4/sms_spam_model/bilstm_model")
+
+# Load RL model from Hugging Face
+tokenizer_rl = AutoTokenizer.from_pretrained("https://huggingface.co/AavV4/sms_spam_model/trained_model2")
+model_rl = AutoModelForSequenceClassification.from_pretrained("https://huggingface.co/AavV4/sms_spam_model/trained_model2")
+model_rl.eval()
+
+# Load PU model from Hugging Face
+pu_tokenizer = RobertaTokenizer.from_pretrained('roberta-base')
+roberta_model = TFRobertaModel.from_pretrained('roberta-base')
+roberta_model.trainable = False
+
+pu_classifier = xgb.Booster()
+pu_classifier.load_model("https://huggingface.co/AavV4/sms_spam_model/xgboost_spam_filter.model")
+
+def classify_with_bilstm(text):
+    inputs = bilstm_tokenizer(text, return_tensors="tf", padding="max_length", truncation=True, max_length=128)
+    embeddings = distilbert(inputs).last_hidden_state
+    prediction = bilstm_model.predict(embeddings)
+    spam_prob = float(tf.nn.sigmoid(prediction)[0][0])
+    return max(0, min(1, spam_prob))
+
+def classify_with_rl(text):
+    inputs = tokenizer_rl(text, return_tensors="pt")
+    outputs = model_rl(**inputs)
+    probs = torch.nn.functional.softmax(outputs.logits, dim=-1)
+    return max(0, min(1, float(probs[0][1])))
+
+def classify_with_pu(text):
+    inputs = pu_tokenizer(text, return_tensors="tf", truncation=True, max_length=128)
+    embeddings = roberta_model(inputs).last_hidden_state[:, 0, :]
+    dmatrix = xgb.DMatrix(embeddings.numpy())
+    pu_probs = pu_classifier.predict(dmatrix)
+    return max(0, min(1, float(pu_probs[0]) if pu_probs.size > 0 else 0.5))
+
+def soft_voting_ensemble(text):
+    probs_bilstm = classify_with_bilstm(text)
+    probs_rl = classify_with_rl(text)
+    probs_pu = classify_with_pu(text)
+    return (probs_bilstm + probs_rl + probs_pu) / 3
 
 
 def generate_bar_chart(metrics, title):
